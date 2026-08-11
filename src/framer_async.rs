@@ -334,7 +334,7 @@ where
 }
 
 #[cfg(feature = "embedded-io-async")]
-impl Framer<TRng, crate::Client>
+impl<TRng> Framer<TRng, crate::Client>
 where
     TRng: Rng,
 {
