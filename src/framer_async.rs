@@ -334,7 +334,10 @@ where
 }
 
 #[cfg(feature = "embedded-io-async")]
-impl Framer<Rng, crate::Client> {
+impl Framer<TRng, crate::Client>
+where
+    TRng: Rng,
+{
     pub async fn connect<'a, S>(
         &mut self,
         stream: &mut S,
