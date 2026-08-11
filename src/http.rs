@@ -1,4 +1,5 @@
 use super::*;
+use base64::{engine::general_purpose::STANDARD, Engine};
 use heapless::{String, Vec};
 
 // NOTE: this struct is re-exported
@@ -54,12 +55,12 @@ pub fn read_http_header<'a>(
                     // it is safe to unwrap here because we have checked
                     // the size of the list beforehand
                     sec_websocket_protocol_list
-                        .push(String::from(item))
-                        .unwrap();
+                        .push(String::try_from(item)?)
+                        .map_err(|_| Error::Unknown)?;
                 }
             }
         } else if name.eq_ignore_ascii_case("sec-websocket-key") {
-            sec_websocket_key = String::from(str::from_utf8(value)?);
+            sec_websocket_key = String::try_from(str::from_utf8(value)?)?;
         }
     }
 
@@ -104,7 +105,7 @@ pub fn read_server_connect_handshake_response(
                         return Err(Error::AcceptStringInvalid);
                     }
                 } else if item.name.eq_ignore_ascii_case("sec-websocket-protocol") {
-                    sec_websocket_protocol = Some(String::from(str::from_utf8(item.value)?));
+                    sec_websocket_protocol = Some(String::try_from(str::from_utf8(item.value)?)?);
                 }
             }
 
@@ -116,7 +117,7 @@ pub fn read_server_connect_handshake_response(
 
 pub fn build_connect_handshake_request(
     websocket_options: &WebSocketOptions,
-    rng: &mut impl RngCore,
+    rng: &mut impl Rng,
     to: &mut [u8],
 ) -> Result<(usize, WebSocketKey)> {
     let mut http_request: String<1024> = String::new();
@@ -124,8 +125,8 @@ pub fn build_connect_handshake_request(
 
     let mut key: [u8; 16] = [0; 16];
     rng.fill_bytes(&mut key);
-    base64::encode_config_slice(key, base64::STANDARD, &mut key_as_base64);
-    let sec_websocket_key: String<24> = String::from(str::from_utf8(&key_as_base64)?);
+    STANDARD.encode_slice(key, &mut key_as_base64)?;
+    let sec_websocket_key: String<24> = String::try_from(str::from_utf8(&key_as_base64)?)?;
 
     http_request.push_str("GET ")?;
     http_request.push_str(websocket_options.path)?;
@@ -201,6 +202,6 @@ pub fn build_accept_string(sec_websocket_key: &WebSocketKey, output: &mut [u8]) 
     let mut sha1 = Sha1::new();
     sha1.update(&accept_string);
     let input = sha1.finalize();
-    base64::encode_config_slice(input, base64::STANDARD, output); // no need for slices since the output WILL be 28 bytes
+    STANDARD.encode_slice(input, output)?; // no need for slices since the output WILL be 28 bytes
     Ok(())
 }
