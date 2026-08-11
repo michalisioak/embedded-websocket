@@ -11,7 +11,7 @@ use crate::{
     WebSocketType,
 };
 use core::{cmp::min, str::Utf8Error};
-use rand_core::Rng;
+use rand_core::RngCore as Rng;
 
 // automagically implement the Stream trait for TcpStream if we are using the standard library
 // if you were using no_std you would have to implement your own stream
@@ -338,7 +338,7 @@ mod tests {
         let mut read_buf = vec![0; 1024];
         let mut write_buf = vec![0; 1024];
         let mut read_cursor = 0;
-        let mut ws_client = WebSocketClient::new_client(rand::rng());
+        let mut ws_client = WebSocketClient::new_client(rand::thread_rng());
         ws_client.state = WebSocketState::Open;
         let mut client_framer = Framer::new(
             &mut read_buf,
@@ -366,7 +366,7 @@ mod tests {
         let mut read_buf = vec![0; 1024];
         let mut write_buf = vec![0; 1024];
         let mut read_cursor = 0;
-        let mut ws_client = WebSocketClient::new_client(rand::rng());
+        let mut ws_client = WebSocketClient::new_client(rand::thread_rng());
         ws_client.state = WebSocketState::Open;
         let mut client_framer = Framer::new(
             &mut read_buf,

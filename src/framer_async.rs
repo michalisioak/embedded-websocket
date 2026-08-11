@@ -3,7 +3,7 @@ use core::{fmt::Debug, str::Utf8Error};
 #[cfg(feature = "embedded-io-async")]
 use embedded_io_async::{ErrorType, Read, Write};
 use futures::{Sink, SinkExt, Stream, StreamExt};
-use rand_core::Rng;
+use rand_core::RngCore as Rng;
 
 use crate::{
     WebSocket, WebSocketCloseStatusCode, WebSocketContext, WebSocketOptions,
